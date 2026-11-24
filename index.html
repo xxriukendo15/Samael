@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b141a"><meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg"><title>RKDA</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#0b141a;--p:#111b21;--p2:#202c33;--t:#e9edef;--m:#8696a0;--g:#25d366;--gd:#005c4b;--r:#f15c6d}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--t);font:16px/1.35 system-ui,-apple-system,Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+#app{height:100%;display:flex;flex-direction:column;max-width:720px;margin:auto}
+button,input{font:inherit;color:inherit}
+input{background:var(--p2);border:0;border-radius:24px;padding:12px 16px;width:100%;outline:0}
+input:focus-visible,button:focus-visible{outline:2px solid var(--g)}
+.btn{background:var(--g);color:#06210f;border:0;border-radius:24px;padding:12px 20px;font-weight:600;cursor:pointer}
+.btn.o{background:transparent;color:var(--g);border:1px solid var(--g)}.btn.d{background:var(--p2);color:var(--t)}
+.top{display:flex;align-items:center;gap:12px;padding:14px 16px;font-size:22px;font-weight:600}
+.top small{font-size:14px;font-weight:400;color:var(--m)}
+.list{flex:1;overflow:auto}
+.row{display:flex;gap:14px;align-items:center;padding:12px 16px;cursor:pointer}
+.row:active{background:var(--p)}
+.av{flex:none;width:48px;height:48px;border-radius:50%;background:var(--gd);display:grid;place-items:center;font-weight:600;font-size:20px}
+.mid{flex:1;min-width:0}.mid b{display:block;font-weight:500}
+.mid span{color:var(--m);font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.end{text-align:right;font-size:12px;color:var(--m)}
+.unread .end,.unread .mid span{color:var(--g)}.unread .mid span{font-weight:600}
+.dot{display:inline-block;min-width:20px;height:20px;border-radius:10px;background:var(--g);color:#06210f;font-size:12px;font-weight:700;line-height:20px;text-align:center;padding:0 5px;margin-top:4px}
+.tabs{display:flex;background:var(--p);border-top:1px solid #222d34}
+.tabs button{flex:1;background:0;border:0;padding:10px 0 12px;color:var(--m);font-size:13px;cursor:pointer;position:relative}
+.tabs button i{display:block;width:64px;height:32px;line-height:32px;border-radius:16px;margin:0 auto 2px;font-style:normal;font-size:18px}
+.tabs button.on{color:var(--t);font-weight:600}.tabs button.on i{background:var(--gd)}
+.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);margin:0}
+.fab{position:absolute;right:20px;bottom:calc(84px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:18px;background:var(--g);color:#06210f;border:0;font-size:28px;box-shadow:0 4px 12px #0008;cursor:pointer}
+.hd{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--p)}
+.hd button{background:0;border:0;font-size:24px;cursor:pointer;padding:4px 8px}
+#ms{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:4px;background:#0b141a}
+.b{max-width:78%;padding:7px 10px;border-radius:10px;background:var(--p2);align-self:flex-start;word-wrap:break-word;white-space:pre-wrap}
+.b.me{background:var(--gd);align-self:flex-end}.b small{display:block;text-align:right;font-size:11px;color:#ffffff88;margin-top:2px}
+.bar{display:flex;gap:8px;padding:8px;background:var(--p)}
+.bar input{flex:1}.bar .btn{width:46px;height:46px;padding:0;border-radius:50%}
+.pad{padding:16px;display:flex;flex-direction:column;gap:12px;overflow:auto;flex:1}
+.pad h3{font-size:14px;color:var(--g);font-weight:600;margin-top:8px}
+.card{background:var(--p);border-radius:14px;padding:6px 14px}
+.opt{display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer}
+.opt input{width:auto;accent-color:var(--g)}
+.auth{margin:auto 0;padding:24px;display:flex;flex-direction:column;gap:12px}
+.auth h1{font-size:34px;color:var(--g);text-align:center}.auth p{color:var(--m);text-align:center;font-size:14px}
+.m{color:var(--m);font-size:14px;text-align:center;padding:32px 24px}
+.sheet{position:fixed;inset:0;background:#000a;display:flex;align-items:flex-end;z-index:5}
+.sheet>div{background:var(--p);width:100%;max-width:720px;margin:auto;border-radius:20px 20px 0 0;padding:20px;display:flex;flex-direction:column;gap:12px}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--p2);padding:10px 18px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;max-width:90%}
+#toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body><div id="app"></div><div id="toast" role="status"></div>
+<script>
+const SB='https://wtkczivkydtdpbffkbvw.supabase.co',KEY='sb_publishable_EaFVCjObk1pj7QLTCh9n1Q_ItauiQwI',
+VAPID='BH0xMQHJA6TC1B30Ua_SdGnQeJicP5YzObTDcf4mwyytAGepj-Mb-AAtPu0klO-oXcau89925fk-c3t2zmRD6Zs';
+const sb=supabase.createClient(SB,KEY);
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch{}};
+const mail=a=>a.includes('@')?a:a.toLowerCase()+'@rkda.app';
+const hm=d=>new Date(d).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
+let me,prof,chats=[],reqs=[],tab='chats',cur=null,msgs=[],reg=false,lr={};
+function toast(t){const e=$('#toast');e.textContent=t;e.className='on';clearTimeout(toast.t);toast.t=setTimeout(()=>e.className='',2800)}
+
+/* ---------- Sonidos ---------- */
+const T={ding:[[880,.12],[1320,.28]],pop:[[600,.07],[900,.09]],chime:[[784,.15],[988,.15],[1175,.32]],bell:[[1046,.45],[784,.55]]};
+const TN={ding:'Ding',pop:'Pop',chime:'Campanilla',bell:'Campana'};
+let ac;
+function ring(s){s=s||ls('snd')||'ding';if(s==='off')return;
+ if(s==='custom'){const d=ls('custom');if(d){new Audio(d).play().catch(()=>{});return}}
+ try{ac??=new(window.AudioContext||webkitAudioContext)();ac.resume();let t=ac.currentTime;
+ (T[s]||T.ding).forEach(([f,d])=>{const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;o.connect(g);g.connect(ac.destination);
+ g.gain.setValueAtTime(.35,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.start(t);o.stop(t+d);t+=d*.8})}catch{}}
+addEventListener('pointerdown',()=>{try{ac??=new(window.AudioContext||webkitAudioContext)();ac.resume()}catch{}},{once:true});
+
+/* ---------- Acceso ---------- */
+function authView(reg_){reg=!!reg_;
+ $('#app').innerHTML=`<form class="auth" onsubmit="return false"><h1>RKDA</h1><p>${reg?'Crea tu cuenta. Solo necesitas un alias, no correo.':'Inicia sesión con tu alias'}</p>
+ ${reg?'<input id="n" placeholder="Nombre de usuario" autocomplete="name" maxlength="30">':''}
+ <input id="a" placeholder="Alias (ej. samael_01)" autocapitalize="none" autocomplete="username" maxlength="60">
+ <input id="p" type="password" placeholder="Contraseña" autocomplete="${reg?'new-password':'current-password'}">
+ <button class="btn" onclick="${reg?'register()':'login()'}">${reg?'Crear cuenta':'Entrar'}</button>
+ <button class="btn o" onclick="authView(${!reg})">${reg?'Ya tengo cuenta':'Crear cuenta nueva'}</button></form>`}
+async function login(){const a=$('#a').value.trim().replace(/^@/,''),p=$('#p').value;if(!a||!p)return toast('Escribe tu alias y contraseña');
+ const{error}=await sb.auth.signInWithPassword({email:mail(a),password:p});if(error)return toast('Alias o contraseña incorrectos');start()}
+async function register(){const n=$('#n').value.trim(),a=$('#a').value.trim().replace(/^@/,''),p=$('#p').value;
+ if(!n)return toast('Escribe tu nombre de usuario');
+ if(!/^[A-Za-z0-9_]{3,20}$/.test(a))return toast('Alias: 3 a 20 letras, números o _');
+ if(p.length<6)return toast('La contraseña necesita al menos 6 caracteres');
+ const{data:ok}=await sb.rpc('is_username_available',{p_username:a});if(!ok)return toast('Ese alias ya está en uso');
+ const{error}=await sb.auth.signUp({email:mail(a),password:p,options:{data:{name:n,username:a}}});if(error)return toast(error.message);
+ const r=await sb.auth.signInWithPassword({email:mail(a),password:p});if(r.error)return toast(r.error.message);start()}
+
+/* ---------- Datos ---------- */
+async function load(){
+ const{data:cm}=await sb.from('chat_members').select('chat_id,user_id,profiles(name,username),chats(title,is_group)');
+ const m={};(cm||[]).forEach(r=>{const c=m[r.chat_id]??={id:r.chat_id,g:r.chats?.is_group,t:r.chats?.title,o:[]};if(r.user_id!==me.id&&r.profiles)c.o.push(r.profiles)});
+ chats=Object.values(m);
+ await Promise.all(chats.map(async c=>{const{data}=await sb.from('messages').select('*').eq('chat_id',c.id).order('id',{ascending:false}).limit(1);
+  c.last=data?.[0];c.name=c.g?(c.t||'Grupo'):(c.o[0]?.name||'Chat')}));
+ sortChats();
+ const{data:r}=await sb.from('friendships').select('id,profiles!friendships_requester_fkey(name,username)').eq('addressee_id',me.id).eq('status','pending');reqs=r||[]}
+const sortChats=()=>chats.sort((a,b)=>(b.last?.id||0)-(a.last?.id||0));
+const prev=m=>!m?'Toca para escribir':(m.sender_id===me.id?'Tú: ':'')+(m.kind==='text'?m.body:({image:'📷 Foto',sticker:'Sticker',audio:'🎤 Audio',file:'📎 Archivo',video:'🎥 Video'}[m.kind]||'Mensaje'));
+const isUn=c=>c.last&&c.last.sender_id!==me.id&&c.last.id>(lr[c.id]||0);
+const unN=c=>isUn(c)?1:0;
+
+/* ---------- Vistas ---------- */
+function render(){if(cur)return;
+ const un=chats.filter(isUn).length;
+ let body='';
+ if(tab==='chats'){
+  const ban=('Notification'in window&&Notification.permission==='default')?`<div class="card" style="margin:0 16px 8px;padding:12px 14px"><div style="margin-bottom:8px">Activa las notificaciones para escuchar los mensajes al instante.</div><button class="btn" onclick="pushInit()">Activar</button></div>`:'';
+  body=ban+(chats.length?chats.map(c=>`<div class="row ${isUn(c)?'unread':''}" onclick="openChat('${c.id}')"><div class="av">${esc((c.name||'?')[0].toUpperCase())}</div>
+  <div class="mid"><b>${esc(c.name)}</b><span>${esc(prev(c.last))}</span></div><div class="end">${c.last?hm(c.last.created_at):''}${isUn(c)?'<br><span class="dot">1</span>':''}</div></div>`).join(''):
+  `<div class="m">Aún no tienes chats.<br>Toca + y escribe el alias de tu amigo para enviarle una solicitud.</div>`)}
+ if(tab==='req')body=reqs.length?reqs.map(r=>`<div class="row" style="cursor:default"><div class="av">${esc((r.profiles?.name||'?')[0].toUpperCase())}</div>
+  <div class="mid"><b>${esc(r.profiles?.name)}</b><span>@${esc(r.profiles?.username||'')}</span></div>
+  <button class="btn" style="padding:8px 14px" onclick="resp('${r.id}',true)">Aceptar</button>
+  <button class="btn d" style="padding:8px 14px" onclick="resp('${r.id}',false)">✕</button></div>`).join(''):`<div class="m">No tienes solicitudes pendientes.</div>`;
+ if(tab==='set')body=settings();
+ $('#app').innerHTML=`<div class="top">${tab==='chats'?'RKDA':tab==='req'?'Solicitudes':'Ajustes'}</div><div class="list">${body}</div>
+ ${tab==='chats'?'<button class="fab" aria-label="Agregar contacto" onclick="addSheet()">+</button>':''}
+ <nav class="tabs"><button class="${tab==='chats'?'on':''}" onclick="go('chats')"><i>💬</i>Chats${un?`<span class="dot">${un}</span>`:''}</button>
+ <button class="${tab==='req'?'on':''}" onclick="go('req')"><i>👥</i>Solicitudes${reqs.length?`<span class="dot">${reqs.length}</span>`:''}</button>
+ <button class="${tab==='set'?'on':''}" onclick="go('set')"><i>⚙️</i>Ajustes</button></nav>`;
+ document.title=un?`(${un}) RKDA`:'RKDA'}
+const go=t=>{tab=t;render()};
+
+function settings(){const s=ls('snd')||'ding';
+ return `<div class="pad"><div class="card" style="display:flex;gap:14px;align-items:center;padding:14px"><div class="av">${esc((prof?.name||'?')[0].toUpperCase())}</div>
+ <div><b>${esc(prof?.name)}</b><div style="color:var(--m)">${prof?.username?'@'+esc(prof.username):'Sin alias'}</div></div></div>
+ ${prof?.username?'':`<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px"><b>Elige tu alias</b><span style="color:var(--m);font-size:14px">Tus amigos te encontrarán con él.</span><input id="al" placeholder="alias" autocapitalize="none"><button class="btn" onclick="setAlias()">Guardar alias</button></div>`}
+ <h3>Sonido de notificación</h3><div class="card">
+ ${[...Object.keys(TN),'custom','off'].map(k=>`<label class="opt"><input type="radio" name="sn" ${s===k?'checked':''} onchange="setSnd('${k}')"> ${k==='custom'?'Mi sonido'+(ls('custom')?'':' (sin subir)'):k==='off'?'Silencio':TN[k]}</label>`).join('')}
+ <div style="display:flex;gap:8px;padding:8px 0 10px"><button class="btn d" onclick="ring()">Probar</button><button class="btn o" onclick="$('#f').click()">Subir sonido</button></div>
+ <input id="f" type="file" accept="audio/*" hidden onchange="upSnd(this)"></div>
+ <h3>Notificaciones</h3><div class="card" style="padding:12px 14px;display:flex;flex-direction:column;gap:10px"><span style="color:var(--m);font-size:14px">Estado: ${'Notification'in window?({granted:'activadas',denied:'bloqueadas en el navegador',default:'sin activar'}[Notification.permission]):'no disponible'}</span><button class="btn" onclick="pushInit()">Activar en este dispositivo</button></div>
+ <button class="btn d" onclick="logout()">Cerrar sesión</button></div>`}
+function setSnd(k){ls('snd',k);if(k==='custom'&&!ls('custom'))toast('Sube un archivo de audio');else ring(k)}
+function upSnd(i){const f=i.files[0];if(!f)return;if(f.size>1.5e6)return toast('El audio debe pesar menos de 1.5 MB');
+ const r=new FileReader();r.onload=()=>{ls('custom',r.result);ls('snd','custom');toast('Sonido guardado');ring('custom');render()};r.readAsDataURL(f)}
+async function setAlias(){const a=$('#al').value.trim().replace(/^@/,'');if(!/^[A-Za-z0-9_]{3,20}$/.test(a))return toast('Alias: 3 a 20 letras, números o _');
+ const{error}=await sb.from('profiles').update({username:a}).eq('id',me.id);
+ if(error)return toast(error.code==='23505'?'Ese alias ya está en uso':'No se pudo guardar');prof.username=a;toast('Alias guardado');render()}
+async function logout(){await sb.auth.signOut();location.reload()}
+
+/* ---------- Solicitudes ---------- */
+function addSheet(){const d=document.createElement('div');d.className='sheet';d.onclick=e=>{if(e.target===d)d.remove()};
+ d.innerHTML=`<div><b style="font-size:18px">Agregar contacto</b><span style="color:var(--m);font-size:14px">Escribe su alias exacto. Le llegará una solicitud y podrá aceptarla o no.</span>
+ <input id="fa" placeholder="@alias" autocapitalize="none"><button class="btn" id="fb">Enviar solicitud</button></div>`;
+ document.body.append(d);$('#fa').focus();
+ $('#fb').onclick=async()=>{const a=$('#fa').value.trim();if(!a)return;
+  const{data,error}=await sb.rpc('send_friend_request',{p_alias:a});
+  if(error)return toast(error.message.includes('Ese eres')?'Ese eres tú':'No encontramos ese alias');
+  d.remove();toast({enviada:'Solicitud enviada',ya_enviada:'Ya enviaste una solicitud',ya_son_amigos:'Ya son contactos',aceptada:'¡Solicitud aceptada!'}[data]||'Listo');
+  if(data==='aceptada'){await load();render()}}}
+async function resp(id,ok){const{error}=await sb.rpc('respond_friend_request',{p_id:id,p_accept:ok});if(error)return toast('No se pudo responder');
+ await load();render();toast(ok?'Contacto agregado':'Solicitud rechazada')}
+
+/* ---------- Chat ---------- */
+async function openChat(id){cur=chats.find(c=>c.id===id);if(!cur)return;
+ const{data}=await sb.from('messages').select('*').eq('chat_id',id).order('id',{ascending:false}).limit(100);msgs=(data||[]).reverse();
+ $('#app').innerHTML=`<div class="hd"><button onclick="closeChat()" aria-label="Volver">←</button><div class="av" style="width:40px;height:40px;font-size:17px">${esc((cur.name||'?')[0].toUpperCase())}</div><b>${esc(cur.name)}</b></div>
+ <div id="ms"></div><form class="bar" onsubmit="send(event)"><input id="tx" placeholder="Mensaje" autocomplete="off"><button class="btn" aria-label="Enviar">➤</button></form>`;
+ paint();markRead()}
+function paint(){const e=$('#ms');if(!e)return;e.innerHTML=msgs.map(m=>`<div class="b ${m.sender_id===me.id?'me':''}">${m.kind==='text'?esc(m.body):esc(prev({...m,sender_id:0}))}<small>${hm(m.created_at)}</small></div>`).join('');e.scrollTop=e.scrollHeight}
+function markRead(){if(!cur)return;const l=msgs.at(-1);if(l){lr[cur.id]=l.id;ls('lr',JSON.stringify(lr))}}
+function closeChat(){cur=null;msgs=[];render()}
+async function send(e){e.preventDefault();const i=$('#tx'),b=i.value.trim();if(!b)return;i.value='';
+ const{data,error}=await sb.from('messages').insert({chat_id:cur.id,kind:'text',body:b}).select().single();
+ if(error)return toast('No se envió. Revisa tu conexión');addMsg(data)}
+function addMsg(m){if(!cur||m.chat_id!==cur.id||msgs.some(x=>x.id===m.id))return;msgs.push(m);paint();markRead()}
+
+/* ---------- Tiempo real ---------- */
+function listen(){sb.channel('rk')
+ .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},async p=>{const m=p.new;
+  if(m.sender_id!==me.id&&!(cur&&cur.id===m.chat_id&&!document.hidden))ring();
+  let c=chats.find(x=>x.id===m.chat_id);if(!c){await load()}else{c.last=m;sortChats()}
+  addMsg(m);if(!cur)render()})
+ .on('postgres_changes',{event:'*',schema:'public',table:'friendships'},async()=>{await load();render()})
+ .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_members'},async()=>{await load();render()})
+ .subscribe()}
+
+/* ---------- Push ---------- */
+const u8=s=>{s=(s+'='.repeat((4-s.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from(atob(s),c=>c.charCodeAt(0))};
+async function pushInit(){try{
+ if(!('serviceWorker'in navigator)||!('PushManager'in window))return toast('Este navegador no admite notificaciones push');
+ const r=await navigator.serviceWorker.register('sw.js');
+ if(Notification.permission!=='granted'){const p=await Notification.requestPermission();if(p!=='granted'){render();return toast('Permiso de notificaciones denegado')}}
+ await navigator.serviceWorker.ready;
+ const s=(await r.pushManager.getSubscription())||await r.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:u8(VAPID)});
+ const j=s.toJSON();await sb.rpc('save_push_subscription',{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth});
+ toast('Notificaciones activadas');render()}catch(e){toast('No se pudo activar: '+(e.message||e))}}
+
+/* ---------- Inicio ---------- */
+async function start(){const{data:{session}}=await sb.auth.getSession();if(!session)return authView();
+ me=session.user;try{lr=JSON.parse(ls('lr')||'{}')}catch{}
+ prof=(await sb.from('profiles').select('*').eq('id',me.id).single()).data;
+ await load();render();listen();
+ if('serviceWorker'in navigator&&Notification.permission==='granted')pushInit();
+ const q=new URLSearchParams(location.search).get('chat');if(q)openChat(q);
+ navigator.serviceWorker?.addEventListener('message',e=>{if(e.data?.chat)openChat(e.data.chat)})}
+start();
+</script></body></html>
